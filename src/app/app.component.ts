@@ -1,4 +1,7 @@
 import {Component} from '@angular/core';
+import {LayoutComponent} from './ui/layout/layout.component';
+import {TextInputComponent} from './ui/text-input/text-input.component';
+import {SelectBoxComponent} from './ui/select-box/select-box.component';
 
 @Component({
   selector: 'app-root',
@@ -7,18 +10,30 @@ import {Component} from '@angular/core';
 })
 export class AppComponent {
   viewConfig = [
-    // this.createLayoutViewConfig()
+    this.createLayoutViewConfig(),
     this.createTextInputViewConfig(1),
-    this.createTextInputViewConfig(2)
+    this.createTextInputViewConfig(2),
+    this.createSelectBoxViewConfig(3)
   ];
 
   private createLayoutViewConfig() {
     return {
-      view: 'layout',
+      view: LayoutComponent,
       viewModel: {
         childViews: [
           this.createTextInputViewConfig(3),
-          this.createTextInputViewConfig(4)
+          this.createTextInputViewConfig(4),
+          {
+            view: LayoutComponent,
+            viewModel: {
+              childViews: [
+                this.createTextInputViewConfig(5),
+                this.createTextInputViewConfig(6),
+                this.createSelectBoxViewConfig(7),
+              ],
+              model: null
+            }
+          }
         ],
         model: null
       }
@@ -27,7 +42,7 @@ export class AppComponent {
 
   private createTextInputViewConfig(id) {
     return {
-      view: 'textInput',
+      view: TextInputComponent,
       viewModel: {
         childViews: [],
         model: {
@@ -41,7 +56,7 @@ export class AppComponent {
           outputs: [
             {
               name: 'onKeyup',
-              handler: (e) => console.log(`on blur from ${id}`, e)
+              handler: (e) => console.log(e.target.value)
             }
           ],
         }
@@ -49,4 +64,32 @@ export class AppComponent {
     };
   }
 
+  private createSelectBoxViewConfig(id) {
+    return {
+      view: SelectBoxComponent,
+      viewModel: {
+        childViews: [],
+        model: {
+          inputs: [{
+            name: 'options',
+            value: [
+              {label: 'foo', value: 'foo'},
+              {label: 'bar', value: 'bar'},
+            ]
+          }, {
+            name: 'defaultValue',
+            value: 'foo'
+          }],
+          outputs: [
+            {
+              name: 'onChange',
+              handler: (e) => {
+                this.viewConfig.push(this.createSelectBoxViewConfig(8));
+              }
+            }
+          ],
+        }
+      }
+    };
+  }
 }

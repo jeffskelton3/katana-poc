@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 
 @Component({
   selector: 'kt-select-box',
@@ -6,7 +6,9 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./select-box.component.css']
 })
 export class SelectBoxComponent implements OnInit {
-
+  @Input() options: { label: string, value: any}[] = [];
+  @Output() onChange: EventEmitter<Event> = new EventEmitter<Event>();
+  @Output() onClick: EventEmitter<void> = new EventEmitter<void>();
   constructor() { }
 
   ngOnInit() {

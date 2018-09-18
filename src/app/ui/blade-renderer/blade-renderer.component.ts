@@ -1,5 +1,4 @@
-import {Component, ComponentFactoryResolver, Input, OnInit, ViewContainerRef} from '@angular/core';
-import {TextInputComponent} from "../text-input/text-input.component";
+import {Component, ComponentFactoryResolver, Input, OnInit, Type, ViewContainerRef} from '@angular/core';
 
 @Component({
   selector: 'kt-blade-renderer',
@@ -8,7 +7,7 @@ import {TextInputComponent} from "../text-input/text-input.component";
 })
 export class BladeRendererComponent implements OnInit {
 
-  @Input() view: string;
+  @Input() view: any;
 
   @Input() viewModel: any;
 
@@ -17,50 +16,47 @@ export class BladeRendererComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log(this.view);
-    console.log(this.viewModel);
-    this.render(this.view, this.viewModel);
+    this.buildComponent(this.viewModel, this.view);
   }
 
-  render(view, viewModel) {
-    switch (view) {
-      case 'textInput':
-        return this.buildTextInput(viewModel);
-      case 'selectBox':
-        break;
-      case 'layout':
-        break;
-      default:
-        // render unknown view UI
-        break;
-    }
-  }
-
-  private buildTextInput(viewModel) {
-    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(TextInputComponent);
+  private buildComponent<T>(viewModel, componentToResolve: Type<T>) {
+    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(componentToResolve);
     const componentRef = this.viewContainerRef.createComponent(
       componentFactory,
       0,
       undefined,
       []
     );
-    const textInput = componentRef.instance;
-    viewModel.model.inputs.forEach(input => {
-      textInput[input.name] = input.value;
-    });
-    viewModel.model.outputs.forEach(output => {
-      if (textInput[output.name]) {
-        textInput[output.name].subscribe(output.handler);
-      }
-    });
+    const componentInstance = componentRef.instance;
+    if (viewModel.model) {
+
+      const allowedInputs = componentFactory.inputs;
+      viewModel.model.inputs.forEach(input => {
+        const allowed = !!allowedInputs.find(ai => ai.propName === input.name);
+        if (allowed) {
+          componentInstance[input.name] = input.value;
+        } else {
+          console.error(`invalid input name ${input.name}`);
+        }
+      });
+
+      const allowedOutputs = componentFactory.outputs;
+      viewModel.model.outputs.forEach(output => {
+        const allowed = !!allowedOutputs.find(ai => ai.propName === output.name);
+        if (allowed) {
+          componentInstance[output.name].subscribe(output.handler);
+        } else {
+          console.error(`invalid output name ${output.name}`);
+        }
+      });
+    }
+
+    if (viewModel.childViews.length) {
+      const children = viewModel.childViews.map(v => this.buildComponent(v.viewModel, v.view));
+      children.forEach(c => componentRef.location.nativeElement.appendChild(c));
+    }
+
     componentRef.changeDetectorRef.detectChanges();
     return componentRef.location.nativeElement;
   }
-
-  private buildSelectBox(viewModel) {
-  }
-
-  private buildLayout(viewModel) {
-  }
-
 }
