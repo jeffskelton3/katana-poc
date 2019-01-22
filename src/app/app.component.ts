@@ -1,7 +1,18 @@
-import {Component} from '@angular/core';
+import {Component, Type} from '@angular/core';
 import {LayoutComponent} from './ui/layout/layout.component';
 import {TextInputComponent} from './ui/text-input/text-input.component';
 import {SelectBoxComponent} from './ui/select-box/select-box.component';
+
+export interface View {
+  viewModel: {
+    childViews: View[],
+    model: {
+      inputs: { name: string, value: any }[],
+      outputs: { name: string, handler: any }[]
+    }
+  };
+  view: any;
+}
 
 @Component({
   selector: 'app-root',
@@ -9,14 +20,14 @@ import {SelectBoxComponent} from './ui/select-box/select-box.component';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  viewConfig = [
+  viewConfig: View[] = [
     this.createLayoutViewConfig(),
     this.createTextInputViewConfig(1),
     this.createTextInputViewConfig(2),
     this.createSelectBoxViewConfig(3)
   ];
 
-  private createLayoutViewConfig() {
+  private createLayoutViewConfig(): View {
     return {
       view: LayoutComponent,
       viewModel: {
@@ -40,7 +51,7 @@ export class AppComponent {
     };
   }
 
-  private createTextInputViewConfig(id) {
+  private createTextInputViewConfig(id): View {
     return {
       view: TextInputComponent,
       viewModel: {
@@ -53,18 +64,16 @@ export class AppComponent {
             name: 'defaultValue',
             value: 'this is my default value'
           }],
-          outputs: [
-            {
-              name: 'onKeyup',
-              handler: (e) => console.log(e.target.value)
-            }
-          ],
+          outputs: [{
+            name: 'onKeyup',
+            handler: (e) => console.log(e.target.value)
+          }],
         }
       }
     };
   }
 
-  private createSelectBoxViewConfig(id) {
+  private createSelectBoxViewConfig(id): View {
     return {
       view: SelectBoxComponent,
       viewModel: {
